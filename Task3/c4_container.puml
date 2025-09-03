@@ -1,0 +1,82 @@
+@startuml StandartBank_Container
+title StandartBank Container Diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(client, "Клиент", "Клиент банка")
+Person(back_manager, "Менеджер бэк-офиса")
+Person(operator, "Оператор кол-центра")
+
+System(DepositSystem, "Deposit Request System", "Система управления заявками на открытие депозитов")
+System(InternetBankSystem, "Internet-bank System", "Интернет-банк")
+System(ABS, "ABS", "Автоматизированная банковская система")
+System(CallCenterSystem, "Call center system", "Система кол-центра")
+System(TelecomOperatorGateway, "Telecom operator Gateway", "СМС-шлюз телеком-оператора")
+System(Website, "Website", "Сайт банка для отображения маркетинговой информации и приема заявок")
+System(NotificationSystem, "Notification System", "Система отправки уведомлений клиентам")
+
+Container_Boundary(DepositSystem, "Deposit System") {
+  Container(DepositApi, "Deposit System API", ".NET Framework", "АПИ для интеграции интернет-банка и кол-центров с Kafka")
+  ContainerQueue(DepositKafka, "Deposit Event Queue", "Kafka", "Очередь сообщений для обработки депозитов менеджерами")
+  Container(DepositService, "Deposit Service", ".NET Framework", "Сервис, работающий с АБС для обработки заявок на депозиты. Служит ")
+  ContainerDb(DepositDatabase, "Database", "MS SQL", "БД для хранения состояния депозитов (открытые, ожидающие подтверждения и т.д.)")
+}
+
+Rel_L(DepositApi, DepositKafka, "Принимает события через ручки и сохраняет их в кафку", "Kafka")
+Rel_U(DepositService, DepositKafka, "Обрабатывает события с заявками на депозит", "Kafka")
+Rel_R(DepositService, DepositDatabase, "Сохраняет состояние заявок в БД", "ODBC")
+
+Container_Boundary(InternetBankSystem, "Internet-bank System") {
+  Container(InternetBankWebApp, "Web Application", "ASP.NET MVC, .NET Framework", "Веб-интерфейс интернет-банка")
+  ContainerDb(InternetBankDatabase, "Database", "MS SQL", "СУБД для клиент-серверной системы банка")
+  Container(InternetBankBankService, "Bank service", "Платформа подрядчика", "Монолит на платформе подрядчика, реализующий основную функциональность интернет-банка")
+}
+
+Rel_L(InternetBankWebApp, InternetBankBankService, "Выполняет основную логику в сервисе", "JSON/HTTPS")
+Rel(InternetBankBankService, InternetBankDatabase, "Хранит данные, необходимые для работы банка", "ODBC")
+
+Container_Boundary(ABS, "ABS") {
+  Container(AbsClient, "Desktop Client", "Delphi", "Интерфейс пользователей АБС")
+  ContainerDb(AbsDatabase, "Database", "Oracle", "СУБД с основной логикой работы системы, реализованной на процедурах PL/SQL")
+}
+
+Rel(AbsClient, AbsDatabase, "Исполняет процедуры PL/SQL", "ODAC")
+
+Container_Boundary(NotificationSystem, "Notification System") {
+  ContainerQueue(NotificationKafka, "Notification Event Queue", "Kafka", "Очередь нотификаций, готовых к отправке")
+  Container(NotificationService, "Notification Service", ".NET Framework", "Обрабатывает события из очереди и отправляет нотификации через СМС-шлюз")
+}
+
+Rel_L(NotificationService, NotificationKafka, "Обрабатывает события из очереди для отправки нотификаций", "Kafka")
+
+System_Ext(TelecomOperator, "Telecom Operator", "Внешний оператор по отправке СМС")
+
+Rel(client, InternetBankWebApp, "Просматривает актуальные и персонализированные ставки.\n Подает заявку на депозит.\n Подтверждает заявку СМС-кодом")
+Rel(client, Website, "Просматривает актуальные ставки.\n Подает заявку на депозит")
+
+Rel(back_manager, AbsClient, "Обрабатывает заявки на депозит")
+
+Rel(operator, CallCenterSystem, "Обрабатывает заявки клиентов.\n Звонит клиентам для подтверждения заявки")
+
+Rel(Website, CallCenterSystem, "Добавляет заявки в очередь на подтверждение оператором", "JSON/HTTPS")
+
+Rel(CallCenterSystem, DepositApi, "Отправляет подтвержденные заявки", "JSON/HTTPS")
+Rel(InternetBankBankService, DepositApi, "Отправляет подтвержденные заявки", "JSON/HTTPS")
+
+Rel(DepositService, NotificationKafka, "Отправляет событие на отправку клиенту кода для подтверждения заявки", "Kafka")
+Rel(DepositService, AbsDatabase, "Сохраняет подтвержденную заявку для обработки менеджером", "ODAC")
+
+Rel(AbsDatabase, TelecomOperatorGateway, "Отправляет СМС через шлюз")
+
+Rel(NotificationService, TelecomOperatorGateway, "Отправляет СМС через шлюз")
+Rel(TelecomOperatorGateway, TelecomOperator, "Использует для отправки СМС")
+
+Lay_R(InternetBankSystem, Website)
+Lay_R(Website, CallCenterSystem)
+
+Lay_R(back_manager, client)
+Lay_R(client, operator)
+
+@enduml

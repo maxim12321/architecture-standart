@@ -1,0 +1,46 @@
+@startuml StandartBank_Context
+title StandartBank Context Diagram
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Клиент", "Клиент банка")
+Person(back_manager, "Менеджер бэк-офиса")
+Person(operator, "Оператор кол-центра")
+
+System(DepositSystem, "Deposit Request System", "Система управления заявками на открытие депозитов")
+System(InternetBankSystem, "Internet-bank System", "Интернет-банк")
+System(ABS, "ABS", "Автоматизированная банковская система")
+System(CallCenterSystem, "Call center system", "Система кол-центра")
+System(TelecomOperatorGateway, "Telecom operator Gateway", "СМС-шлюз телеком-оператора")
+System(Website, "Website", "Сайт банка для отображения маркетинговой информации и приема заявок")
+System(NotificationSystem, "Notification System", "Система отправки уведомлений клиентам")
+
+System_Ext(TelecomOperator, "Telecom Operator", "Внешний оператор по отправке СМС")
+
+Rel_D(client, InternetBankSystem, "Просматривает актуальные и персонализированные ставки.\n Подает заявку на депозит.\n Подтверждает заявку СМС-кодом")
+Rel_D(client, Website, "Просматривает актуальные ставки.\n Подает заявку на депозит")
+
+Rel_D(back_manager, ABS, "Обрабатывает заявки на депозит")
+
+Rel_D(operator, CallCenterSystem, "Обрабатывает заявки клиентов.\n Звонит клиентам для подтверждения заявки")
+
+Rel_L(Website, CallCenterSystem, "Добавляет заявки в очередь на подтверждение оператором")
+
+Rel(CallCenterSystem, DepositSystem, "Отправляет подтвержденные заявки")
+Rel(InternetBankSystem, DepositSystem, "Отправляет подтвержденные заявки")
+
+Rel(DepositSystem, NotificationSystem, "Отправляет клиенту код для подтверждения заявки")
+Rel(DepositSystem, ABS, "Сохраняет подтвержденную заявку для обработки менеджером")
+
+Rel(ABS, TelecomOperatorGateway, "Отправляет СМС через шлюз")
+
+Rel(NotificationSystem, TelecomOperatorGateway, "Отправляет СМС через шлюз")
+Rel(TelecomOperatorGateway, TelecomOperator, "Использует для отправки СМС")
+
+Lay_R(back_manager, client)
+Lay_R(client, operator)
+
+Lay_R(InternetBankSystem, Website)
+Lay_R(Website, CallCenterSystem)
+
+@enduml
