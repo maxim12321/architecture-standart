@@ -1,0 +1,33 @@
+@startuml StandartBank_RatesTransfer_Context
+title StandartBank Context Diagram for Rates transfer
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(credit_manager, "Сотрудник отдела кредитования")
+Person(back_manager, "Менеджер бэк-офиса")
+Person(operator, "Оператор кол-центра")
+Person_Ext(ext_operator, "Оператор партнерского кол-центра")
+
+System(ABS, "ABS", "Автоматизированная банковская система")
+System(CallCenterSystem, "Call center system", "Система кол-центра")
+System(LoanRatesSystem, "Loan rates system", "Система учета ставок кредитования")
+
+System_Ext(ExtCallCenterSystem, "Partner call center system", "Система партнерского кол-центра")
+
+Rel_U(credit_manager, LoanRatesSystem, "Ежедневно обновляет общую ставку на депозиты")
+
+Rel(operator, CallCenterSystem, "Просматривает ставки\n Создает обращения на персонализированные ставки")
+
+Rel(ext_operator, ExtCallCenterSystem, "Просматривает ставки")
+
+Rel(CallCenterSystem, ABS, "Передает обращения на персонализированные ставки для клиентов")
+
+Rel_U(back_manager, ABS, "Обрабатывает обращения на персонализированные ставки")
+Rel_U(back_manager, LoanRatesSystem, "Устанавливает персонализированные ставки для отдельных клиентов")
+
+Rel(CallCenterSystem, LoanRatesSystem, "Получает ставки по кредитам (общие и персонализированные)")
+Rel(ExtCallCenterSystem, LoanRatesSystem, "Получает ставки по кредитам")
+
+Lay_R(operator, ext_operator)
+
+@enduml
