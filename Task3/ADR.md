@@ -37,6 +37,7 @@
 ### <a name="_qmphm5d6rvi3"></a>**Решение**
 
 Диаграмма контекста выглядит следующим образом:
+
 ![StandartBank_Context.png](./StandartBank_Context.png)
 
 На ней добавлены две новые системы: Deposit Request system и Notification system.
@@ -60,6 +61,7 @@
 СМС-сообщений через несколько шлюзов, если такое в будущем случится.
 
 Теперь приведем более подробную диаграмму контейнеров:
+
 ![StandartBank_Container.png](./StandartBank_Container.png)
 
 API перед кафкой в Deposit Request System существует для

@@ -1,0 +1,48 @@
+@startuml StandartBank_RatesTransfer_Container
+title StandartBank Container Diagram for Rates transfer
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(credit_manager, "Сотрудник отдела кредитования")
+Person(back_manager, "Менеджер бэк-офиса")
+Person(operator, "Оператор кол-центра")
+Person_Ext(ext_operator, "Оператор партнерского кол-центра")
+
+System(ABS, "ABS", "Автоматизированная банковская система")
+System(CallCenterSystem, "Call center system", "Система кол-центра")
+System(LoanRatesSystem, "Loan rates system", "Система учета ставок кредитования")
+
+System_Ext(ExtCallCenterSystem, "Partner call center system", "Система партнерского кол-центра")
+
+Container_Boundary(ABS, "ABS") {
+  Container(AbsClient, "Desktop Client", "Delphi", "Интерфейс пользователей АБС")
+  ContainerDb(AbsDatabase, "Database", "Oracle", "СУБД с основной логикой работы системы, реализованной на процедурах PL/SQL")
+}
+
+Rel(AbsClient, AbsDatabase, "Исполняет процедуры PL/SQL", "ODAC")
+
+Container_Boundary(LoanRatesSystem, "Loan rates system") {
+  Container(LoanRatesService, "Loan rates client-server", "ASP.NET MVC", "Клиент-серверная система для управления ставками по депозитам и отдачи этих ставок через файловые протоколы")
+  ContainerDb(LoanRatesDatabase, "Database", "MS SQL", "БД для хранения ставок по депозитам (общих и персонализированных)")
+}
+
+Rel(LoanRatesService, LoanRatesDatabase, "Сохраняет обновленные ставки, получает актуальные", "ODBC")
+
+Rel_L(credit_manager, LoanRatesService, "Ежедневно обновляет общую ставку на депозиты")
+
+Rel(operator, CallCenterSystem, "Просматривает ставки\n Создает обращения на персонализированные ставки")
+
+Rel(ext_operator, ExtCallCenterSystem, "Просматривает ставки")
+
+Rel(CallCenterSystem, AbsDatabase, "Передает обращения на персонализированные ставки для клиентов", "ODAC")
+
+Rel_R(back_manager, LoanRatesService, "Устанавливает персонализированные ставки для отдельных клиентов")
+
+Rel(CallCenterSystem, LoanRatesService, "Получает ставки по кредитам (общие и персонализированные)", "SFTP")
+Rel(ExtCallCenterSystem, LoanRatesService, "Получает ставки по кредитам", "SFTP")
+
+Rel(back_manager, AbsClient, "Обрабатывает обращения на персонализированные ставки")
+
+@enduml
